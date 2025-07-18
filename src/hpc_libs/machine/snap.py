@@ -87,7 +87,7 @@ class SnapServiceManager(ServiceManager):
         """Restart service."""
         snap("restart", self._service)
 
-    def is_active(self) -> bool:
+    def active(self) -> bool:
         """Check if service is active."""
         info = yaml.safe_load(snap("info", self._snap)[0])
         services = info.get("services")

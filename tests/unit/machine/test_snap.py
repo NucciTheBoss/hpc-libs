@@ -177,7 +177,7 @@ class TestSnapServiceManager:
         """Test the `active` method."""
         mock_snap.return_value = mock_result
         if installed:
-            status = service_manager.is_active()
+            status = service_manager.active()
             if service_name_is_snap_name:
                 mock_snap.assert_called_with("info", "slurmctld")
                 assert status is False
@@ -186,7 +186,7 @@ class TestSnapServiceManager:
                 assert status is True
         else:
             with pytest.raises(SnapError) as exec_info:
-                service_manager.is_active()
+                service_manager.active()
 
             assert exec_info.type == SnapError
             if service_name_is_snap_name:
