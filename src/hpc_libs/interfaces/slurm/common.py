@@ -1,4 +1,4 @@
-# Copyright 2025 Canonical Ltd.
+# Copyright 2025-2026 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,12 +74,11 @@ class ControllerData:
             primary `slurmctld` service. Other entries are failovers.
         jwt_key: Base64-encoded string representing the Slurm JWT key.
         jwt_key_id: ID of the Slurm JWT key Juju secret for this integration instance.
-        nhc_args: Arguments to pass to `nhc` - Node Health Check - on compute nodes.
         slurmconfig: Mapping containing the `slurm.conf` and other included configuration files.
 
     Notes:
         - `sackd` requires:         `auth_key_id`, `controllers`
-        - `slurmd` requires:        `auth_key_id`, `controllers`, `nhc_params`
+        - `slurmd` requires:        `auth_key_id`, `controllers`
         - `slurmdbd` requires:      `auth_key_id`, `jwt_key_id`
         - `slurmrestd` requires:    `auth_key_id`, `slurmconfig`
     """
@@ -89,7 +88,6 @@ class ControllerData:
     controllers: list[str] = field(default_factory=list)
     jwt_key: str = ""
     jwt_key_id: str = ""
-    nhc_args: str = ""
     slurmconfig: dict[str, SlurmConfig] = field(default_factory=dict)
 
     def __post_init__(self) -> None:  # noqa D105
