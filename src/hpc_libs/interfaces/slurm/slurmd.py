@@ -1,4 +1,4 @@
-# Copyright 2025 Canonical Ltd.
+# Copyright 2025-2026 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ from hpc_libs.utils import leader
 _REQUIRED_APP_DATA = {
     "auth_key_id": lambda value: value != '""',
     "controllers": lambda value: value != "[]",
-    "nhc_args": lambda _: True,
 }
 
 

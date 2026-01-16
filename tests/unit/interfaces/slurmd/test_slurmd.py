@@ -1,4 +1,4 @@
-# Copyright 2025 Canonical Ltd.
+# Copyright 2025-2026 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ from hpc_libs.utils import refresh
 SLURMD_INTEGRATION_NAME = "slurmd"
 EXAMPLE_AUTH_KEY = "xyz123=="
 EXAMPLE_CONTROLLERS = ["127.0.0.1", "127.0.1.1"]
-EXAMPLE_NHC_ARGS = "-x -v"
 EXAMPLE_PARTITION_CONFIG = Partition(partitionname="polaris")
 
 
@@ -85,7 +84,6 @@ class MockSlurmdProviderCharm(ops.CharmBase):
         # Assume `remote_app_data` contains and `auth_key` and `controllers` list.
         assert data.auth_key == EXAMPLE_AUTH_KEY
         assert data.controllers == EXAMPLE_CONTROLLERS
-        assert data.nhc_args == EXAMPLE_NHC_ARGS
 
 
 class MockSlurmdRequirerCharm(ops.CharmBase):
@@ -245,14 +243,12 @@ class TestSlurmdInterface:
                 "auth_key": '"***"',
                 "auth_key_id": json.dumps(auth_key_secret.id),
                 "controllers": json.dumps(EXAMPLE_CONTROLLERS),
-                "nhc_args": json.dumps(EXAMPLE_NHC_ARGS),
             }
             if ready
             else {
                 "auth_key": '"***"',
                 "auth_key_id": json.dumps(auth_key_secret.id),
                 "controllers": json.dumps([]),
-                "nhc_args": json.dumps(EXAMPLE_NHC_ARGS),
             },
         )
 
