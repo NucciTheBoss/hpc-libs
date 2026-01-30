@@ -125,8 +125,7 @@ all = [
 dev = [
     { name = "codespell" },
     { name = "coverage", extra = ["toml"] },
-    { name = "ops" },
-    { name = "ops-scenario" },
+    { name = "ops", extra = ["testing"] },
     { name = "pyfakefs" },
     { name = "pyright" },
     { name = "pytest" },
@@ -153,8 +152,8 @@ requires-dist = [
     { name = "hpc-libs", extras = ["all"], marker = "extra == 'dev'" },
     { name = "hpc-libs", extras = ["interfaces"], marker = "extra == 'all'" },
     { name = "hpc-libs", extras = ["machine"], marker = "extra == 'all'" },
-    { name = "ops", marker = "extra == 'interfaces'", specifier = "~=2.23" },
-    { name = "ops-scenario", marker = "extra == 'dev'", specifier = "~=7.22" },
+    { name = "ops", marker = "extra == 'interfaces'", specifier = "~=3.0" },
+    { name = "ops", extras = ["testing"], marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "pyfakefs", marker = "extra == 'dev'", specifier = "~=5.9" },
     { name = "pyright", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "~=8.3" },
@@ -239,30 +238,35 @@ wheels = [
 
 [[package]]
 name = "ops"
-version = "2.23.0"
+version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-metadata" },
     { name = "opentelemetry-api" },
     { name = "pyyaml" },
     { name = "websocket-client" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/c8/1e85a3e025fdf28283107c56d40229075e79ae1ac0736f2ca67ae1e2a635/ops-2.23.0.tar.gz", hash = "sha256:3e6c29a8f2119c7b8eaa88c82b5371de236dfcb7a7bf0012a6e2a829f0837fb7", size = 527426, upload-time = "2025-06-30T07:50:04.444Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/d7/86b0b4db046221db85d8c8bc4c1df22aa3915b17081530f6c25ede7243e7/ops-3.5.1.tar.gz", hash = "sha256:376ef51d35d45b376795196851550e209565e922e58af8ac491cf23bc8b46498", size = 577928, upload-time = "2026-01-28T03:10:52.817Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/0e/86b8893f08c4ff8e3c15f983b30cf59f99b0a940600a484b886703aba317/ops-2.23.0-py3-none-any.whl", hash = "sha256:7a42840410e8570acc3a4b498973a5bcd3fd0b12dd06837f57b9379b3acdfac3", size = 188165, upload-time = "2025-06-30T07:50:02.779Z" },
+    { url = "https://files.pythonhosted.org/packages/59/77/e9ba7bd69917bf481dd8f3162ec37b028021d605f8e17a1fd05a5ec103e8/ops-3.5.1-py3-none-any.whl", hash = "sha256:890dd7bf33d1381afeed0e484d02c7bb13ad3945dcc7b723e8d73e4bba0ff94c", size = 211691, upload-time = "2026-01-28T03:10:48.778Z" },
+]
+
+[package.optional-dependencies]
+testing = [
+    { name = "ops-scenario" },
 ]
 
 [[package]]
 name = "ops-scenario"
-version = "7.23.0"
+version = "8.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ops" },
     { name = "pyyaml" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/6d/c492eeb69930b33cc1d099c510df890fd27afc296ca88e1d5c3fac675636/ops_scenario-7.23.0.tar.gz", hash = "sha256:32a40966a92138779e5f47fff0653037e98e4561fcb30a02014733a88a68c998", size = 109460, upload-time = "2025-06-30T07:50:12.54Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/de/b6de767862bcdfce2e68eeedc578dd0b1332eb0a73af0da6ee9244c5b514/ops_scenario-8.5.1.tar.gz", hash = "sha256:9b9a3cd67b5704f58d17952ca9327d11391a3b3ce7daea26d040458165e1117f", size = 112317, upload-time = "2026-01-28T03:10:54.486Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/a6/cfc7ef8e1530363f55462eb24e6a37f429891a287209bb288c4f80525459/ops_scenario-7.23.0-py3-none-any.whl", hash = "sha256:88ddb6b8b41688c580b38fc10dfa3706ab65a481931c26b07a298f2dd82a86ae", size = 64313, upload-time = "2025-06-30T07:50:10.799Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/c3/5c84236fa8054ebad8b371582cecadfe9a03e77625176db37501a529f8d2/ops_scenario-8.5.1-py3-none-any.whl", hash = "sha256:909be01c223726019659b5454b4792c38b1d6ed5e8835d1d71794d6202b0f0ec", size = 64069, upload-time = "2026-01-28T03:10:50.077Z" },
 ]
 
 [[package]]
