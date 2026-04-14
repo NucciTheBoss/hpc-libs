@@ -21,7 +21,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from charmed_hpc_libs.errors import SnapError
-from charmed_hpc_libs.ops import SnapServiceManager, snap
+from charmed_hpc_libs.ops import SnapOperationsManager, SnapServiceManager, snap
 
 # This input is modified. If the service name is the same as the snap name, then the
 # service will be started as `snap start slurm` rather than `snap start slurm.slurm`.
@@ -71,6 +71,12 @@ channels:
 """
 
 
+@pytest.fixture(scope="function")
+def mock_snap(mocker: MockerFixture) -> Mock:
+    """Create a mocked `snap` function."""
+    return mocker.patch("charmed_hpc_libs.ops.machine.snap.snap")
+
+
 def test_snap(mocker: MockerFixture) -> None:
     """Test the `snap` function."""
     mock_run = mocker.patch.object(subprocess, "run")
@@ -97,6 +103,72 @@ def test_snap(mocker: MockerFixture) -> None:
     )
 
 
+class TestSnapOperationsManager:
+    """Test the `SnapOperationsManager` class."""
+
+    @pytest.fixture
+    def operations_manager(self) -> SnapOperationsManager:
+        """Create a `SnapOperationsManager` object."""
+        return SnapOperationsManager("slurm")
+
+    def test_install(self, operations_manager, mock_snap) -> None:
+        """Test the `install` method."""
+        operations_manager.install()
+        mock_snap.assert_called_with("install", "slurm")
+
+    def test_remove(self, operations_manager, mock_snap) -> None:
+        """Test the `remove` method."""
+        operations_manager.remove()
+        mock_snap.assert_called_with("remove", "slurm")
+
+        operations_manager.remove(purge=True)
+        mock_snap.assert_called_with("remove", "slurm", "--purge")
+
+    def test_connect(self, operations_manager, mock_snap) -> None:
+        """Test the `connect` method."""
+        operations_manager.connect("network-observe")
+        mock_snap.assert_called_with("connect", "slurm:network-observe")
+
+        operations_manager.connect("network-observe", service="snapd", slot="network-observe")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd:network-observe")
+
+        operations_manager.connect("network-observe", slot="system")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", "system")
+
+        operations_manager.connect("network-observe", service="snapd")
+        mock_snap.assert_called_with("connect", "slurm:network-observe")
+
+    def test_get(self, operations_manager, mock_snap) -> None:
+        """Test the `get` method."""
+        mock_snap.return_value = ('{"exporter.port": 9100}', 0)
+        assert operations_manager.get("exporter.port") == 9100
+        mock_snap.assert_called_with("get", "-d", "slurm", "exporter.port")
+
+        mock_snap.return_value = ('{"key": "value"}', 0)
+        assert operations_manager.get("key") == "value"
+
+        mock_snap.return_value = ("not valid json", 0)
+        with pytest.raises(SnapError) as exec_info:
+            operations_manager.get("exporter.port")
+        assert exec_info.value.message == (
+            "Failed to decode value of configuration option 'exporter.port' for snap 'slurm'"
+        )
+
+        mock_snap.side_effect = SnapError("snap command failed")
+        with pytest.raises(SnapError):
+            operations_manager.get("exporter.port")
+
+    def test_set(self, operations_manager, mock_snap) -> None:
+        """Test the `set` method."""
+        operations_manager.set({"port": "8817"})
+        mock_snap.assert_called_with("set", "slurm", 'port="8817"')
+
+    def test_unset(self, operations_manager, mock_snap) -> None:
+        """Test the `unset` method."""
+        operations_manager.unset("port")
+        mock_snap.assert_called_with("unset", "slurm", "port")
+
+
 @pytest.mark.parametrize(
     "service_name_is_snap_name",
     (
@@ -113,11 +185,6 @@ class TestSnapServiceManager:
         return SnapServiceManager(
             "slurmctld", snap="slurm" if not service_name_is_snap_name else None
         )
-
-    @pytest.fixture
-    def mock_snap(self, mocker: MockerFixture) -> Mock:
-        """Create a mocked `snap` function."""
-        return mocker.patch("charmed_hpc_libs.ops.machine.snap.snap")
 
     def test_start(self, service_manager, mock_snap, service_name_is_snap_name) -> None:
         """Test the `start` method."""

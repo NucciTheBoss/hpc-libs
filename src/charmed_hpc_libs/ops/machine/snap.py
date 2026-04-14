@@ -14,15 +14,17 @@
 
 """Control `snap`/`snapd` in HPC machine charms."""
 
-__all__ = ["SnapServiceManager", "snap"]
+__all__ = ["SnapLifecycleManager", "SnapOperationsManager", "SnapServiceManager", "snap"]
 
+import json
+from collections.abc import Mapping
 from subprocess import CalledProcessError
 from typing import Any
 
 import yaml
 
 from ...errors import SnapError
-from ..core import ServiceManager, call
+from ..core import OperationsManager, ServiceManager, call
 
 
 def snap(*args: str, **kwargs: Any) -> tuple[str, int]:  # noqa D417
@@ -46,6 +48,85 @@ def snap(*args: str, **kwargs: Any) -> tuple[str, int]:  # noqa D417
         )
 
     return result.stdout, result.returncode
+
+
+class SnapOperationsManager(OperationsManager):
+    """Control the operations of a `snap` package."""
+
+    def __init__(self, snap: str) -> None:
+        self._snap = snap
+
+    def install(self) -> None:
+        """Install package."""
+        snap("install", self._snap)
+
+    def remove(self, /, purge: bool = False) -> None:
+        """Remove package.
+
+        Args:
+            purge: Remove the package without saving a snapshot of its data. Default: False.
+        """
+        command = ["remove", self._snap]
+        if purge:
+            command.append("--purge")
+
+        snap(*command)
+
+    def connect(self, plug: str, *, service: str | None = None, slot: str | None = None) -> None:
+        """Connect a plug to a slot.
+
+        Args:
+            plug: The plug to connect.
+            service: The snap service name to plug into.
+            slot: The snap service slot to plug in to.
+        """
+        command = ["connect", f"{self._snap}:{plug}"]
+        if service and slot:
+            command.append(f"{service}:{slot}")
+        elif slot:
+            command.append(slot)
+
+        snap(*command)
+
+    def get(self, key: str) -> Any:
+        """Get snap configuration.
+
+        Args:
+            key: Snap configuration key to get the value of.
+
+        Examples:
+            >>> package = SnapOperationsManager("slurm")
+            >>> package.get("exporter.port")
+            >>> 9100
+        """
+        result = snap("get", "-d", self._snap, key)
+        try:
+            data = json.loads(result[0])
+        except json.JSONDecodeError as e:
+            raise SnapError(
+                f"Failed to decode value of configuration option '{key}' for snap '{self._snap}'"
+            ) from e
+
+        return data[key]
+
+    def set(self, config: Mapping[str, Any]) -> None:
+        """Set snap configuration.
+
+        Args:
+            config: Snap configuration to set.
+
+        Notes:
+            - Keys can use dot notation.
+        """
+        snap("set", self._snap, *[f"{k}={json.dumps(v)}" for k, v in config.items()])
+
+    def unset(self, *keys: str) -> None:
+        """Unset snap configuration.
+
+        Args:
+            keys: Snap configuration keys to unset.
+        """
+        snap("unset", self._snap, *keys)
 
 
 class SnapServiceManager(ServiceManager):
@@ -99,3 +180,12 @@ class SnapServiceManager(ServiceManager):
         # Do not check for "active" in the service's state because the
         # word "active" is also part of "inactive".
         return "inactive" not in services[self._service]
+
+
+class SnapLifecycleManager(SnapOperationsManager, SnapServiceManager):
+    """Manage the full lifecycle operations of a snapped application."""
+
+    def __init__(self, snap: str, /, service: str = "") -> None:
+        # Call `__init__` explicitly to avoid opaque MRO resolution order.
+        SnapOperationsManager.__init__(self, snap)
+        SnapServiceManager.__init__(self, service or snap, snap=snap if service else None)
