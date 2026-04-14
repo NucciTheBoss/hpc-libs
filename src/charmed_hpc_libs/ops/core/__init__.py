@@ -17,9 +17,12 @@
 __all__ = [
     # From `call.py`
     "call",
+    # From `operations.py`
+    "OperationsManager",
     # From `service.py`
     "ServiceManager",
 ]
 
 from .call import call
+from .operations import OperationsManager
 from .service import ServiceManager
