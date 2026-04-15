@@ -83,8 +83,10 @@ class SnapOperationsManager(OperationsManager):
         command = ["connect", f"{self._snap}:{plug}"]
         if service and slot:
             command.append(f"{service}:{slot}")
+        elif service:
+            command.append(service)
         elif slot:
-            command.append(slot)
+            command.append(f":{slot}")
 
         snap(*command)
 

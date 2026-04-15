@@ -133,10 +133,10 @@ class TestSnapOperationsManager:
         mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd:network-observe")
 
         operations_manager.connect("network-observe", slot="system")
-        mock_snap.assert_called_with("connect", "slurm:network-observe", "system")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", ":system")
 
         operations_manager.connect("network-observe", service="snapd")
-        mock_snap.assert_called_with("connect", "slurm:network-observe")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd")
 
     def test_get(self, operations_manager, mock_snap) -> None:
         """Test the `get` method."""
