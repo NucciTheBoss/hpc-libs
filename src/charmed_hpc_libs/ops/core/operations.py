@@ -14,19 +14,19 @@
 
 """Base protocol for defining operations managers."""
 
-__all__ = ["OperationsManager"]
+__all__ = ["OpsManager"]
 
 from abc import abstractmethod
-from typing import Any, Protocol
+from typing import Protocol
 
 
-class OperationsManager(Protocol):  # pragma: no cover
+class OpsManager(Protocol):  # pragma: no cover
     """Base protocol for defining operation managers."""
 
     @abstractmethod
-    def install(self, *args: Any, **kwargs: Any) -> None:  # noqa D102
+    def install(self) -> None:  # noqa D102
         raise NotImplementedError
 
     @abstractmethod
-    def remove(self, *args: Any, **kwargs: Any) -> None:  # noqa D102
+    def remove(self) -> None:  # noqa D102
         raise NotImplementedError
