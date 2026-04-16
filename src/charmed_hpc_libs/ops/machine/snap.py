@@ -37,7 +37,7 @@ def snap(*args: str, **kwargs: Any) -> tuple[str, int]:  # noqa D417
             exits with a non-zero exit code.
 
     Raises:
-        SystemdError: Raised if a `snap` command fails and check is set to `True`.
+        SnapError: Raised if a `snap` command fails and check is set to `True`.
     """
     try:
         result = call("snap", *args, **kwargs)
