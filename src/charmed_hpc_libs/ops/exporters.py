@@ -28,16 +28,13 @@ class NodeExporterManager(SnapLifecycleManager):
     def __init__(self) -> None:
         super().__init__("node-exporter")
 
-    @property
-    def collectors(self) -> list[str]:
+    def get_collectors(self) -> list[str]:
         """Get the list of optionally-enabled collectors.
-
-        Providing an empty list `[]` will disable all optionally-enabled collectors.
 
         Examples:
             >>> node_exporter = NodeExporterManager()
-            >>> node_exporter.collectors = ["ntp"]
-            >>> node_exporter.collectors
+            >>> node_exporter.set_collectors(["ntp"])
+            >>> node_exporter.get_collectors()
             >>> ["ntp"]
         """
         try:
@@ -46,21 +43,28 @@ class NodeExporterManager(SnapLifecycleManager):
             # `SnapError` is raised if `collectors` option is empty.
             return []
 
-    @collectors.setter
-    def collectors(self, value: Collection[str]) -> None:
+    def set_collectors(self, value: Collection[str]) -> None:
+        """Enable optional collectors.
+
+        Args:
+            value: Collection of optional collectors to enable.
+
+        Notes:
+            - Providing an empty collection will unset all optionally-enabled collectors.
+            - The service will restart after the list of collectors is updated.
+        """
         if len(value) == 0:
             self.unset("collectors")
         else:
             self.set({"collectors": " ".join(value)})
 
-    @property
-    def no_collectors(self) -> list[str]:
+    def get_no_collectors(self) -> list[str]:
         """Get the list of disabled collectors.
 
         Examples:
             >>> node_exporter = NodeExporterManager()
-            >>> node_exporter.no_collectors = ["mdadm", "netstat"]
-            >>> node_exporter.no_collectors
+            >>> node_exporter.set_no_collectors(["mdadm", "netstat"])
+            >>> node_exporter.get_no_collectors()
             >>> ["mdadm", "netstat"]
         """
         try:
@@ -69,23 +73,30 @@ class NodeExporterManager(SnapLifecycleManager):
             # `SnapError` is raised if `no-collectors` option is empty.
             return []
 
-    @no_collectors.setter
-    def no_collectors(self, value: Collection[str]) -> None:
+    def set_no_collectors(self, value: Collection[str]) -> None:
+        """Disable collectors.
+
+        Args:
+            value: Collection of collectors to disable.
+
+        Notes:
+            - Providing an empty collection will unset all disabled collectors.
+            - The service will restart after the list of disabled collectors is updated.
+        """
         if len(value) == 0:
             self.unset("no-collectors")
         else:
             self.set({"no-collectors": " ".join(value)})
 
-    @property
-    def web_listen_address(self) -> str:
+    def get_web_listen_address(self) -> str:
         """Get web address and port used by the `node-exporter` service.
 
         Examples:
             >>> node_exporter = NodeExporterManager()
-            >>> node_exporter.web_listen_address
+            >>> node_exporter.get_web_listen_address()
             >>> ":9200"
-            >>> node_exporter.web_listen_address = "127.0.0.1:9200"
-            >>> node_exporter.web_listen_address
+            >>> node_exporter.set_web_listen_address("127.0.0.1:9200")
+            >>> node_exporter.get_web_listen_address()
             >>> "127.0.0.1:9200"
         """
         try:
@@ -94,10 +105,17 @@ class NodeExporterManager(SnapLifecycleManager):
             # `SnapError` is raised if `web.listen-address` option is empty.
             return ""
 
-    @web_listen_address.setter
-    def web_listen_address(self, value: str) -> None:
-        self.set({"web.listen-address": value})
+    def set_web_listen_address(self, value: str) -> None:
+        """Set web address and port used by the `node-exporter` service.
 
-    @web_listen_address.deleter
-    def web_listen_address(self) -> None:
-        self.unset("web.listen-address")
+        Args:
+            value: The web listen address to use for the `node-exporter` service.
+
+        Notes:
+            - Providing an empty string will unset the web listen address.
+            - The service will restart after the web listen address is updated.
+        """
+        if value:
+            self.set({"web.listen-address": value})
+        else:
+            self.unset("web.listen-address")

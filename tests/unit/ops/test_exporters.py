@@ -37,50 +37,56 @@ class TestNodeExporterManager:
         """Create a `NodeExporterManager` object."""
         return NodeExporterManager()
 
-    def test_collectors(self, node_exporter_manager, mock_snap) -> None:
-        """Test the `collectors` property."""
+    def test_get_collectors(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `get_collectors` method."""
         mock_snap.return_value = ('{"collectors": "ntp cpu"}', 0)
-        assert node_exporter_manager.collectors == ["ntp", "cpu"]
-
-        node_exporter_manager.collectors = ["ntp", "cpu"]
-        mock_snap.assert_called_with("set", "node-exporter", 'collectors="ntp cpu"')
-
-        node_exporter_manager.collectors = []
-        mock_snap.assert_called_with("unset", "node-exporter", "collectors")
+        assert node_exporter_manager.get_collectors() == ["ntp", "cpu"]
 
         mock_snap.side_effect = SnapError(
             "error: snap 'node-exporter' has no 'collectors' configuration option"
         )
-        assert node_exporter_manager.collectors == []
+        assert node_exporter_manager.get_collectors() == []
 
-    def test_no_collectors(self, node_exporter_manager, mock_snap) -> None:
-        """Test the `no_collectors` property."""
+    def test_set_collectors(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `set_collectors` method."""
+        node_exporter_manager.set_collectors(["ntp", "cpu"])
+        mock_snap.assert_called_with("set", "node-exporter", 'collectors="ntp cpu"')
+
+        node_exporter_manager.set_collectors([])
+        mock_snap.assert_called_with("unset", "node-exporter", "collectors")
+
+    def test_get_no_collectors(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `get_no_collectors` method."""
         mock_snap.return_value = ('{"no-collectors": "mdadm netstat"}', 0)
-        assert node_exporter_manager.no_collectors == ["mdadm", "netstat"]
-
-        node_exporter_manager.no_collectors = ["netstat", "btrfs"]
-        mock_snap.assert_called_with("set", "node-exporter", 'no-collectors="netstat btrfs"')
-
-        node_exporter_manager.no_collectors = []
-        mock_snap.assert_called_with("unset", "node-exporter", "no-collectors")
+        assert node_exporter_manager.get_no_collectors() == ["mdadm", "netstat"]
 
         mock_snap.side_effect = SnapError(
             "error: snap 'node-exporter' has no 'no-collectors' configuration option"
         )
-        assert node_exporter_manager.no_collectors == []
+        assert node_exporter_manager.get_no_collectors() == []
 
-    def test_web_listen_address(self, node_exporter_manager, mock_snap) -> None:
-        """Test the `web_listen_address` property."""
+    def test_set_no_collectors(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `set_no_collectors` method."""
+        node_exporter_manager.set_no_collectors(["netstat", "btrfs"])
+        mock_snap.assert_called_with("set", "node-exporter", 'no-collectors="netstat btrfs"')
+
+        node_exporter_manager.set_no_collectors([])
+        mock_snap.assert_called_with("unset", "node-exporter", "no-collectors")
+
+    def test_get_web_listen_address(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `get_web_listen_address` method."""
         mock_snap.return_value = ('{"web.listen-address": "127.0.0.1:9200"}', 0)
-        assert node_exporter_manager.web_listen_address == "127.0.0.1:9200"
-
-        node_exporter_manager.web_listen_address = "127.0.0.1:9200"
-        mock_snap.assert_called_with("set", "node-exporter", 'web.listen-address="127.0.0.1:9200"')
-
-        del node_exporter_manager.web_listen_address
-        mock_snap.assert_called_with("unset", "node-exporter", "web.listen-address")
+        assert node_exporter_manager.get_web_listen_address() == "127.0.0.1:9200"
 
         mock_snap.side_effect = SnapError(
             "error: snap 'node-exporter' has no 'web.listen-address' configuration option"
         )
-        assert node_exporter_manager.web_listen_address == ""
+        assert node_exporter_manager.get_web_listen_address() == ""
+
+    def test_set_web_listen_address(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `set_web_listen_address` method."""
+        node_exporter_manager.set_web_listen_address("127.0.0.1:9200")
+        mock_snap.assert_called_with("set", "node-exporter", 'web.listen-address="127.0.0.1:9200"')
+
+        node_exporter_manager.set_web_listen_address("")
+        mock_snap.assert_called_with("unset", "node-exporter", "web.listen-address")
