@@ -38,7 +38,7 @@ class NodeExporterManager(SnapLifecycleManager):
             >>> ["ntp"]
         """
         try:
-            return self.get("collectors").split()
+            return self.config.get("collectors").split()
         except SnapError:
             # `SnapError` is raised if `collectors` option is empty.
             return []
@@ -54,9 +54,9 @@ class NodeExporterManager(SnapLifecycleManager):
             - The service will restart after the list of collectors is updated.
         """
         if len(value) == 0:
-            self.unset("collectors")
+            self.config.unset("collectors")
         else:
-            self.set({"collectors": " ".join(value)})
+            self.config.set({"collectors": " ".join(value)})
 
     def get_no_collectors(self) -> list[str]:
         """Get the list of disabled collectors.
@@ -68,7 +68,7 @@ class NodeExporterManager(SnapLifecycleManager):
             >>> ["mdadm", "netstat"]
         """
         try:
-            return self.get("no-collectors").split()
+            return self.config.get("no-collectors").split()
         except SnapError:
             # `SnapError` is raised if `no-collectors` option is empty.
             return []
@@ -84,9 +84,9 @@ class NodeExporterManager(SnapLifecycleManager):
             - The service will restart after the list of disabled collectors is updated.
         """
         if len(value) == 0:
-            self.unset("no-collectors")
+            self.config.unset("no-collectors")
         else:
-            self.set({"no-collectors": " ".join(value)})
+            self.config.set({"no-collectors": " ".join(value)})
 
     def get_web_listen_address(self) -> str:
         """Get web address and port used by the `node-exporter` service.
@@ -100,7 +100,7 @@ class NodeExporterManager(SnapLifecycleManager):
             >>> "127.0.0.1:9200"
         """
         try:
-            return self.get("web.listen-address")
+            return self.config.get("web.listen-address")
         except SnapError:
             # `SnapError` is raised if `web.listen-address` option is empty.
             return ""
@@ -116,6 +116,6 @@ class NodeExporterManager(SnapLifecycleManager):
             - The service will restart after the web listen address is updated.
         """
         if value:
-            self.set({"web.listen-address": value})
+            self.config.set({"web.listen-address": value})
         else:
-            self.unset("web.listen-address")
+            self.config.unset("web.listen-address")

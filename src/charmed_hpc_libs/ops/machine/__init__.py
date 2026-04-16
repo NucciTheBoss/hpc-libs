@@ -16,8 +16,9 @@
 
 __all__ = [
     # From `snap.py`
+    "SnapConfigManager",
     "SnapLifecycleManager",
-    "SnapOperationsManager",
+    "SnapOpsManager",
     "SnapServiceManager",
     "snap",
     # From `systemd.py`
@@ -26,5 +27,5 @@ __all__ = [
     "is_container",
 ]
 
-from .snap import SnapLifecycleManager, SnapOperationsManager, SnapServiceManager, snap
+from .snap import SnapConfigManager, SnapLifecycleManager, SnapOpsManager, SnapServiceManager, snap
 from .systemd import SystemctlServiceManager, is_container, systemctl

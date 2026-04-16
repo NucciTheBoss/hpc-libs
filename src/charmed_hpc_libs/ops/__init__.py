@@ -27,15 +27,16 @@ __all__ = [
     "wait_unless",
     # From `core` module
     "call",
-    "OperationsManager",
+    "OpsManager",
     "ServiceManager",
     # From `env.py`
     "EnvManager",
     # From `exporters.py`
     "NodeExporterManager",
     # From `machine` module
+    "SnapConfigManager",
     "SnapLifecycleManager",
-    "SnapOperationsManager",
+    "SnapOpsManager",
     "SnapServiceManager",
     "SystemctlServiceManager",
     "is_container",
@@ -59,12 +60,13 @@ from .conditions import (
     refresh,
     wait_unless,
 )
-from .core import OperationsManager, ServiceManager, call
+from .core import OpsManager, ServiceManager, call
 from .env import EnvManager
 from .exporters import NodeExporterManager
 from .machine import (
+    SnapConfigManager,
     SnapLifecycleManager,
-    SnapOperationsManager,
+    SnapOpsManager,
     SnapServiceManager,
     SystemctlServiceManager,
     is_container,

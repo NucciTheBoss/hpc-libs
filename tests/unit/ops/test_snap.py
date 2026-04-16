@@ -21,7 +21,13 @@ import pytest
 from pytest_mock import MockerFixture
 
 from charmed_hpc_libs.errors import SnapError
-from charmed_hpc_libs.ops import SnapOperationsManager, SnapServiceManager, snap
+from charmed_hpc_libs.ops import (
+    SnapConfigManager,
+    SnapLifecycleManager,
+    SnapOpsManager,
+    SnapServiceManager,
+    snap,
+)
 
 # This input is modified. If the service name is the same as the snap name, then the
 # service will be started as `snap start slurm` rather than `snap start slurm.slurm`.
@@ -103,70 +109,79 @@ def test_snap(mocker: MockerFixture) -> None:
     )
 
 
-class TestSnapOperationsManager:
-    """Test the `SnapOperationsManager` class."""
+class TestSnapConfigManager:
+    """Test the `SnapConfigManager` class."""
 
     @pytest.fixture
-    def operations_manager(self) -> SnapOperationsManager:
-        """Create a `SnapOperationsManager` object."""
-        return SnapOperationsManager("slurm")
+    def config_manager(self) -> SnapConfigManager:
+        """Create a `SnapConfigManager` object."""
+        return SnapConfigManager("slurm")
 
-    def test_install(self, operations_manager, mock_snap) -> None:
-        """Test the `install` method."""
-        operations_manager.install()
-        mock_snap.assert_called_with("install", "slurm")
-
-    def test_remove(self, operations_manager, mock_snap) -> None:
-        """Test the `remove` method."""
-        operations_manager.remove()
-        mock_snap.assert_called_with("remove", "slurm")
-
-        operations_manager.remove(purge=True)
-        mock_snap.assert_called_with("remove", "slurm", "--purge")
-
-    def test_connect(self, operations_manager, mock_snap) -> None:
-        """Test the `connect` method."""
-        operations_manager.connect("network-observe")
-        mock_snap.assert_called_with("connect", "slurm:network-observe")
-
-        operations_manager.connect("network-observe", service="snapd", slot="network-observe")
-        mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd:network-observe")
-
-        operations_manager.connect("network-observe", slot="system")
-        mock_snap.assert_called_with("connect", "slurm:network-observe", ":system")
-
-        operations_manager.connect("network-observe", service="snapd")
-        mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd")
-
-    def test_get(self, operations_manager, mock_snap) -> None:
+    def test_get(self, config_manager, mock_snap) -> None:
         """Test the `get` method."""
         mock_snap.return_value = ('{"exporter.port": 9100}', 0)
-        assert operations_manager.get("exporter.port") == 9100
+        assert config_manager.get("exporter.port") == 9100
         mock_snap.assert_called_with("get", "-d", "slurm", "exporter.port")
 
         mock_snap.return_value = ('{"key": "value"}', 0)
-        assert operations_manager.get("key") == "value"
+        assert config_manager.get("key") == "value"
 
         mock_snap.return_value = ("not valid json", 0)
         with pytest.raises(SnapError) as exec_info:
-            operations_manager.get("exporter.port")
+            config_manager.get("exporter.port")
         assert exec_info.value.message == (
             "Failed to decode value of configuration option 'exporter.port' for snap 'slurm'"
         )
 
         mock_snap.side_effect = SnapError("snap command failed")
         with pytest.raises(SnapError):
-            operations_manager.get("exporter.port")
+            config_manager.get("exporter.port")
 
-    def test_set(self, operations_manager, mock_snap) -> None:
+    def test_set(self, config_manager, mock_snap) -> None:
         """Test the `set` method."""
-        operations_manager.set({"port": "8817"})
+        config_manager.set({"port": "8817"})
         mock_snap.assert_called_with("set", "slurm", 'port="8817"')
 
-    def test_unset(self, operations_manager, mock_snap) -> None:
+    def test_unset(self, config_manager, mock_snap) -> None:
         """Test the `unset` method."""
-        operations_manager.unset("port")
+        config_manager.unset("port")
         mock_snap.assert_called_with("unset", "slurm", "port")
+
+
+class TestSnapOpsManager:
+    """Test the `SnapOpsManager` class."""
+
+    @pytest.fixture
+    def ops_manager(self) -> SnapOpsManager:
+        """Create a `SnapOpsManager` object."""
+        return SnapOpsManager("slurm")
+
+    def test_install(self, ops_manager, mock_snap) -> None:
+        """Test the `install` method."""
+        ops_manager.install()
+        mock_snap.assert_called_with("install", "slurm")
+
+    def test_remove(self, ops_manager, mock_snap) -> None:
+        """Test the `remove` method."""
+        ops_manager.remove()
+        mock_snap.assert_called_with("remove", "slurm")
+
+        ops_manager.remove(purge=True)
+        mock_snap.assert_called_with("remove", "slurm", "--purge")
+
+    def test_connect(self, ops_manager, mock_snap) -> None:
+        """Test the `connect` method."""
+        ops_manager.connect("network-observe")
+        mock_snap.assert_called_with("connect", "slurm:network-observe")
+
+        ops_manager.connect("network-observe", service="snapd", slot="network-observe")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd:network-observe")
+
+        ops_manager.connect("network-observe", slot="system")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", ":system")
+
+        ops_manager.connect("network-observe", service="snapd")
+        mock_snap.assert_called_with("connect", "slurm:network-observe", "snapd")
 
 
 @pytest.mark.parametrize(
@@ -264,3 +279,22 @@ class TestSnapServiceManager:
                 assert exec_info.value.message == (
                     "cannot retrieve 'slurm.slurmctld' service info with 'snap info slurm'"
                 )
+
+
+class TestSnapLifecycleManager:
+    """Test the `SnapLifecycleManager` class."""
+
+    @pytest.fixture
+    def lifecycle_manager(self) -> SnapLifecycleManager:
+        """Create a `SnapLifecycleManager` object."""
+        return SnapLifecycleManager("slurm")
+
+    def test_config(self, lifecycle_manager, mock_snap) -> None:
+        """Test the `config` property."""
+        mock_snap.return_value = ('{"exporter.port": 9100}', 0)
+        assert lifecycle_manager.config.get("exporter.port") == 9100
+
+    def test_service(self, lifecycle_manager, mock_snap) -> None:
+        """Test the `service` property."""
+        lifecycle_manager.service.start()
+        mock_snap.assert_called_with("start", "slurm")

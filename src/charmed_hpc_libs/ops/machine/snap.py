@@ -14,7 +14,13 @@
 
 """Control `snap`/`snapd` in HPC machine charms."""
 
-__all__ = ["SnapLifecycleManager", "SnapOperationsManager", "SnapServiceManager", "snap"]
+__all__ = [
+    "SnapConfigManager",
+    "SnapLifecycleManager",
+    "SnapOpsManager",
+    "SnapServiceManager",
+    "snap",
+]
 
 import json
 from collections.abc import Mapping
@@ -24,7 +30,7 @@ from typing import Any
 import yaml
 
 from ...errors import SnapError
-from ..core import OperationsManager, ServiceManager, call
+from ..core import OpsManager, ServiceManager, call
 
 
 def snap(*args: str, **kwargs: Any) -> tuple[str, int]:  # noqa D417
@@ -50,45 +56,15 @@ def snap(*args: str, **kwargs: Any) -> tuple[str, int]:  # noqa D417
     return result.stdout, result.returncode
 
 
-class SnapOperationsManager(OperationsManager):
-    """Control the operations of a `snap` package."""
+class _SnapManager:
+    """Manage snap packages."""
 
     def __init__(self, snap: str) -> None:
         self._snap = snap
 
-    def install(self) -> None:
-        """Install package."""
-        snap("install", self._snap)
 
-    def remove(self, /, purge: bool = False) -> None:
-        """Remove package.
-
-        Args:
-            purge: Remove the package without saving a snapshot of its data. Default: False.
-        """
-        command = ["remove", self._snap]
-        if purge:
-            command.append("--purge")
-
-        snap(*command)
-
-    def connect(self, plug: str, *, service: str | None = None, slot: str | None = None) -> None:
-        """Connect a plug to a slot.
-
-        Args:
-            plug: The plug to connect.
-            service: The snap service name to plug into.
-            slot: The snap service slot to plug in to.
-        """
-        command = ["connect", f"{self._snap}:{plug}"]
-        if service and slot:
-            command.append(f"{service}:{slot}")
-        elif service:
-            command.append(service)
-        elif slot:
-            command.append(f":{slot}")
-
-        snap(*command)
+class SnapConfigManager(_SnapManager):
+    """Control the configuration of a snap package."""
 
     def get(self, key: str) -> Any:
         """Get snap configuration.
@@ -97,7 +73,7 @@ class SnapOperationsManager(OperationsManager):
             key: Snap configuration key to get the value of.
 
         Examples:
-            >>> package = SnapOperationsManager("slurm")
+            >>> package = SnapConfigManager("slurm")
             >>> package.get("exporter.port")
             >>> 9100
         """
@@ -131,7 +107,45 @@ class SnapOperationsManager(OperationsManager):
         snap("unset", self._snap, *keys)
 
 
-class SnapServiceManager(ServiceManager):
+class SnapOpsManager(_SnapManager, OpsManager):
+    """Control the operations of a `snap` package."""
+
+    def install(self) -> None:
+        """Install package."""
+        snap("install", self._snap)
+
+    def remove(self, *, purge: bool = False) -> None:
+        """Remove package.
+
+        Args:
+            purge: Remove the package without saving a snapshot of its data. Default: False.
+        """
+        command = ["remove", self._snap]
+        if purge:
+            command.append("--purge")
+
+        snap(*command)
+
+    def connect(self, plug: str, *, service: str | None = None, slot: str | None = None) -> None:
+        """Connect a plug to a slot.
+
+        Args:
+            plug: The plug to connect.
+            service: The snap service name to plug into.
+            slot: The snap service slot to plug in to.
+        """
+        command = ["connect", f"{self._snap}:{plug}"]
+        if service and slot:
+            command.append(f"{service}:{slot}")
+        elif service:
+            command.append(service)
+        elif slot:
+            command.append(f":{slot}")
+
+        snap(*command)
+
+
+class SnapServiceManager(_SnapManager, ServiceManager):
     """Control a service using `snap`.
 
     Args:
@@ -147,8 +161,8 @@ class SnapServiceManager(ServiceManager):
     """
 
     def __init__(self, service: str, /, snap: str | None = None) -> None:
+        super().__init__(snap if snap else service)
         self._service = f"{snap}.{service}" if snap else service
-        self._snap = snap if snap else service
 
     def start(self) -> None:
         """Start service."""
@@ -184,10 +198,24 @@ class SnapServiceManager(ServiceManager):
         return "inactive" not in services[self._service]
 
 
-class SnapLifecycleManager(SnapOperationsManager, SnapServiceManager):
+class SnapLifecycleManager:
     """Manage the full lifecycle operations of a snapped application."""
 
     def __init__(self, snap: str, /, service: str = "") -> None:
-        # Call `__init__` explicitly to avoid opaque MRO resolution order.
-        SnapOperationsManager.__init__(self, snap)
-        SnapServiceManager.__init__(self, service or snap, snap=snap if service else None)
+        self._config_manager = SnapConfigManager(snap)
+        self._ops_manager = SnapOpsManager(snap)
+        self._service_manager = SnapServiceManager(service or snap, snap=snap if service else None)
+
+        self.install = self._ops_manager.install
+        self.remove = self._ops_manager.remove
+        self.connect = self._ops_manager.connect
+
+    @property
+    def config(self) -> SnapConfigManager:
+        """Manage the snap configuration."""
+        return self._config_manager
+
+    @property
+    def service(self) -> SnapServiceManager:
+        """Manage the snapped service."""
+        return self._service_manager
