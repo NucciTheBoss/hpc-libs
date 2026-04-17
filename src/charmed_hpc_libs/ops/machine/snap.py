@@ -56,15 +56,11 @@ def snap(*args: str, **kwargs: Any) -> tuple[str, int]:  # noqa D417
     return result.stdout, result.returncode
 
 
-class _SnapManager:
-    """Manage snap packages."""
+class SnapConfigManager:
+    """Control the configuration of a snap package."""
 
     def __init__(self, snap: str) -> None:
         self._snap = snap
-
-
-class SnapConfigManager(_SnapManager):
-    """Control the configuration of a snap package."""
 
     def get(self, key: str) -> Any:
         """Get snap configuration.
@@ -107,8 +103,11 @@ class SnapConfigManager(_SnapManager):
         snap("unset", self._snap, *keys)
 
 
-class SnapOpsManager(_SnapManager, OpsManager):
+class SnapOpsManager(OpsManager):
     """Control the operations of a `snap` package."""
+
+    def __init__(self, snap: str) -> None:
+        self._snap = snap
 
     def install(self) -> None:
         """Install package."""
@@ -145,7 +144,7 @@ class SnapOpsManager(_SnapManager, OpsManager):
         snap(*command)
 
 
-class SnapServiceManager(_SnapManager, ServiceManager):
+class SnapServiceManager(ServiceManager):
     """Control a service using `snap`.
 
     Args:
@@ -161,7 +160,7 @@ class SnapServiceManager(_SnapManager, ServiceManager):
     """
 
     def __init__(self, service: str, /, snap: str | None = None) -> None:
-        super().__init__(snap if snap else service)
+        self._snap = snap if snap else service
         self._service = f"{snap}.{service}" if snap else service
 
     def start(self) -> None:
