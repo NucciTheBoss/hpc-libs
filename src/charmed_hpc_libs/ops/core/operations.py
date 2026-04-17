@@ -1,4 +1,4 @@
-# Copyright 2025 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Libraries for interfacing with machine resources."""
+"""Base protocol for defining operations managers."""
 
-__all__ = [
-    # From `snap.py`
-    "SnapConfigManager",
-    "SnapLifecycleManager",
-    "SnapOpsManager",
-    "SnapServiceManager",
-    "snap",
-    # From `systemd.py`
-    "SystemctlServiceManager",
-    "systemctl",
-    "is_container",
-]
+__all__ = ["OpsManager"]
 
-from .snap import SnapConfigManager, SnapLifecycleManager, SnapOpsManager, SnapServiceManager, snap
-from .systemd import SystemctlServiceManager, is_container, systemctl
+from abc import abstractmethod
+from typing import Protocol
+
+
+class OpsManager(Protocol):  # pragma: no cover
+    """Base protocol for defining operation managers."""
+
+    @abstractmethod
+    def install(self) -> None:  # noqa D102
+        raise NotImplementedError
+
+    @abstractmethod
+    def remove(self) -> None:  # noqa D102
+        raise NotImplementedError

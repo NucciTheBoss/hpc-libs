@@ -27,10 +27,16 @@ __all__ = [
     "wait_unless",
     # From `core` module
     "call",
+    "OpsManager",
     "ServiceManager",
     # From `env.py`
     "EnvManager",
+    # From `exporters.py`
+    "NodeExporterManager",
     # From `machine` module
+    "SnapConfigManager",
+    "SnapLifecycleManager",
+    "SnapOpsManager",
     "SnapServiceManager",
     "SystemctlServiceManager",
     "is_container",
@@ -54,8 +60,18 @@ from .conditions import (
     refresh,
     wait_unless,
 )
-from .core import ServiceManager, call
+from .core import OpsManager, ServiceManager, call
 from .env import EnvManager
-from .machine import SnapServiceManager, SystemctlServiceManager, is_container, snap, systemctl
+from .exporters import NodeExporterManager
+from .machine import (
+    SnapConfigManager,
+    SnapLifecycleManager,
+    SnapOpsManager,
+    SnapServiceManager,
+    SystemctlServiceManager,
+    is_container,
+    snap,
+    systemctl,
+)
 from .network import get_ingress_address
 from .secrets import load_secret, update_secret
