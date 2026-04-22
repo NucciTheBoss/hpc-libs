@@ -15,6 +15,8 @@
 """Libraries for interfacing with machine resources."""
 
 __all__ = [
+    # From `nvidia.py`
+    "DCGMManager",
     # From `snap.py`
     "SnapConfigManager",
     "SnapLifecycleManager",
@@ -27,5 +29,6 @@ __all__ = [
     "is_container",
 ]
 
+from .nvidia import DCGMManager
 from .snap import SnapConfigManager, SnapLifecycleManager, SnapOpsManager, SnapServiceManager, snap
 from .systemd import SystemctlServiceManager, is_container, systemctl

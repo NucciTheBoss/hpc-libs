@@ -34,6 +34,7 @@ __all__ = [
     # From `exporters.py`
     "NodeExporterManager",
     # From `machine` module
+    "DCGMManager",
     "SnapConfigManager",
     "SnapLifecycleManager",
     "SnapOpsManager",
@@ -64,6 +65,7 @@ from .core import OpsManager, ServiceManager, call
 from .env import EnvManager
 from .exporters import NodeExporterManager
 from .machine import (
+    DCGMManager,
     SnapConfigManager,
     SnapLifecycleManager,
     SnapOpsManager,
