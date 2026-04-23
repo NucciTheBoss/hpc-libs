@@ -67,20 +67,20 @@ class DCGMManager(SnapLifecycleManager):
         else:
             self.config.unset("dcgm-exporter-address")
 
-    def get_dcgm_exporter_metrics_file(self) -> Path:
+    def get_dcgm_exporter_metrics_file(self) -> Path | None:
         """Get the path to the custom CSV metrics file loaded by the `dcgm-exporter` service.
 
         Notes:
             - The default metrics file is located at
               `/snap/dcgm/current/etc/dcgm-exporter/default-counters.csv`
-            - An empty `Path` object is returned if the output of 'snap get -d dcgm' does not
+            - An `None` is returned if the output of 'snap get -d dcgm' does not
               contain a configured path for the metrics file.
         """
         try:
             return Path(self.config.get("dcgm-exporter-metrics-file"))
         except SnapError:
             # `SnapError` is raised if `dcgm-exporter-metrics-file` option is empty.
-            return Path()
+            return None
 
     def set_dcgm_exporter_metrics_file(self, value: str | Path) -> None:
         """Set the path to the custom CSV metrics file loaded by the `dcgm-exporter` service.
@@ -89,12 +89,12 @@ class DCGMManager(SnapLifecycleManager):
             value: The path to the new custom metrics file.
 
         Notes:
-            - Providing an empty string will unset the custom metrics file path.
+            - Providing an empty string or `Path` object will unset the custom metrics file path.
         """
-        if value:
-            self.config.set({"dcgm-exporter-metrics-file": str(value)})
-        else:
+        if value == "" or value == Path():
             self.config.unset("dcgm-exporter-metrics-file")
+        else:
+            self.config.set({"dcgm-exporter-metrics-file": str(value)})
 
     def get_nv_hostengine_port(self) -> int | None:
         """Get the port that the NV-Hostengine is listening on.

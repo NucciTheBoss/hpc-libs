@@ -85,7 +85,7 @@ class TestDCGMManager:
         mock_snap.side_effect = SnapError(
             "error: snap 'dcgm' has no 'dcgm-exporter-metrics-file' configuration option"
         )
-        assert dcgm_manager.get_dcgm_exporter_metrics_file() == Path()
+        assert dcgm_manager.get_dcgm_exporter_metrics_file() is None
 
     def test_get_nv_hostengine_port(self, dcgm_manager, mock_snap) -> None:
         """Test `get_nv_hostengine_port` returns the configured port number."""
