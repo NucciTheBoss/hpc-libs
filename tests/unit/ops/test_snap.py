@@ -23,7 +23,6 @@ from pytest_mock import MockerFixture
 from charmed_hpc_libs.errors import SnapError
 from charmed_hpc_libs.ops import (
     SnapConfigManager,
-    SnapLifecycleManager,
     SnapOpsManager,
     SnapServiceManager,
     snap,
@@ -279,22 +278,3 @@ class TestSnapServiceManager:
                 assert exec_info.value.message == (
                     "cannot retrieve 'slurm.slurmctld' service info with 'snap info slurm'"
                 )
-
-
-class TestSnapLifecycleManager:
-    """Test the `SnapLifecycleManager` class."""
-
-    @pytest.fixture
-    def lifecycle_manager(self) -> SnapLifecycleManager:
-        """Create a `SnapLifecycleManager` object."""
-        return SnapLifecycleManager("slurm")
-
-    def test_config(self, lifecycle_manager, mock_snap) -> None:
-        """Test the `config` property."""
-        mock_snap.return_value = ('{"exporter.port": 9100}', 0)
-        assert lifecycle_manager.config.get("exporter.port") == 9100
-
-    def test_service(self, lifecycle_manager, mock_snap) -> None:
-        """Test the `service` property."""
-        lifecycle_manager.service.start()
-        mock_snap.assert_called_with("start", "slurm")

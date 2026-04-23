@@ -24,6 +24,7 @@ __all__ = [
 
 import json
 from collections.abc import Mapping
+from functools import cached_property
 from subprocess import CalledProcessError
 from typing import Any
 
@@ -103,47 +104,6 @@ class SnapConfigManager:
         snap("unset", self._snap, *keys)
 
 
-class SnapOpsManager(OpsManager):
-    """Control the operations of a `snap` package."""
-
-    def __init__(self, snap: str) -> None:
-        self._snap = snap
-
-    def install(self) -> None:
-        """Install package."""
-        snap("install", self._snap)
-
-    def remove(self, *, purge: bool = False) -> None:
-        """Remove package.
-
-        Args:
-            purge: Remove the package without saving a snapshot of its data. Default: False.
-        """
-        command = ["remove", self._snap]
-        if purge:
-            command.append("--purge")
-
-        snap(*command)
-
-    def connect(self, plug: str, *, service: str | None = None, slot: str | None = None) -> None:
-        """Connect a plug to a slot.
-
-        Args:
-            plug: The plug to connect.
-            service: The snap service name to plug into.
-            slot: The snap service slot to plug in to.
-        """
-        command = ["connect", f"{self._snap}:{plug}"]
-        if service and slot:
-            command.append(f"{service}:{slot}")
-        elif service:
-            command.append(service)
-        elif slot:
-            command.append(f":{slot}")
-
-        snap(*command)
-
-
 class SnapServiceManager(ServiceManager):
     """Control a service using `snap`.
 
@@ -197,24 +157,67 @@ class SnapServiceManager(ServiceManager):
         return "inactive" not in services[self._service]
 
 
+class SnapOpsManager(OpsManager):
+    """Control the operations of a `snap` package."""
+
+    def __init__(self, snap: str) -> None:
+        self._snap = snap
+
+    def service_manager_for(self, service: str) -> SnapServiceManager:
+        """Create a service manager for the given service name.
+
+        Args:
+            service: Name of the service to create a `SnapServiceManager` for.
+        """
+        return SnapServiceManager(service, snap=self._snap if service != self._snap else None)
+
+    def install(self) -> None:
+        """Install package."""
+        snap("install", self._snap)
+
+    def remove(self, *, purge: bool = False) -> None:
+        """Remove package.
+
+        Args:
+            purge: Remove the package without saving a snapshot of its data. Default: False.
+        """
+        command = ["remove", self._snap]
+        if purge:
+            command.append("--purge")
+
+        snap(*command)
+
+    def connect(self, plug: str, *, service: str | None = None, slot: str | None = None) -> None:
+        """Connect a plug to a slot.
+
+        Args:
+            plug: The plug to connect.
+            service: The snap service name to plug into.
+            slot: The snap service slot to plug in to.
+        """
+        command = ["connect", f"{self._snap}:{plug}"]
+        if service and slot:
+            command.append(f"{service}:{slot}")
+        elif service:
+            command.append(service)
+        elif slot:
+            command.append(f":{slot}")
+
+        snap(*command)
+
+
 class SnapLifecycleManager:
     """Manage the full lifecycle operations of a snapped application."""
 
-    def __init__(self, snap: str, /, service: str = "") -> None:
-        self._config_manager = SnapConfigManager(snap)
+    def __init__(self, snap: str, /) -> None:
+        self._snap = snap
         self._ops_manager = SnapOpsManager(snap)
-        self._service_manager = SnapServiceManager(service or snap, snap=snap if service else None)
 
         self.install = self._ops_manager.install
         self.remove = self._ops_manager.remove
         self.connect = self._ops_manager.connect
 
-    @property
+    @cached_property
     def config(self) -> SnapConfigManager:
         """Manage the snap configuration."""
-        return self._config_manager
-
-    @property
-    def service(self) -> SnapServiceManager:
-        """Manage the snapped service."""
-        return self._service_manager
+        return SnapConfigManager(self._snap)

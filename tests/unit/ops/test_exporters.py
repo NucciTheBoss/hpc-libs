@@ -37,6 +37,11 @@ class TestNodeExporterManager:
         """Create a `NodeExporterManager` object."""
         return NodeExporterManager()
 
+    def test_service(self, node_exporter_manager, mock_snap) -> None:
+        """Test the `service` property."""
+        node_exporter_manager.service.start()
+        mock_snap.assert_called_with("start", "node-exporter")
+
     def test_get_collectors(self, node_exporter_manager, mock_snap) -> None:
         """Test the `get_collectors` method."""
         mock_snap.return_value = ('{"collectors": "ntp cpu"}', 0)

@@ -17,9 +17,10 @@
 __all__ = ["NodeExporterManager"]
 
 from collections.abc import Collection
+from functools import cached_property
 
 from ..errors import SnapError
-from .machine import SnapLifecycleManager
+from .machine import SnapLifecycleManager, SnapServiceManager
 
 
 class NodeExporterManager(SnapLifecycleManager):
@@ -27,6 +28,11 @@ class NodeExporterManager(SnapLifecycleManager):
 
     def __init__(self) -> None:
         super().__init__("node-exporter")
+
+    @cached_property
+    def service(self) -> SnapServiceManager:
+        """Get the service manager for the `node-exporter` service."""
+        return self._ops_manager.service_manager_for("node-exporter")
 
     def get_collectors(self) -> list[str]:
         """Get the list of optionally-enabled collectors.

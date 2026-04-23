@@ -19,9 +19,15 @@ __all__ = ["OpsManager"]
 from abc import abstractmethod
 from typing import Protocol
 
+from .service import ServiceManager
+
 
 class OpsManager(Protocol):  # pragma: no cover
     """Base protocol for defining operation managers."""
+
+    @abstractmethod
+    def service_manager_for(self, service: str) -> ServiceManager:  # noqa D102
+        raise NotImplementedError
 
     @abstractmethod
     def install(self) -> None:  # noqa D102
