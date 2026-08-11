@@ -50,6 +50,9 @@ __all__ = [
     "systemctl",
     # From `network.py`
     "get_ingress_address",
+    # From `observers.py`
+    "ConfigObserver",
+    "Observer",
     # From `secrets.py`
     "load_secret",
     "update_secret",
@@ -85,4 +88,5 @@ from .machine import (
     systemctl,
 )
 from .network import get_ingress_address
+from .observers import ConfigObserver, Observer
 from .secrets import load_secret, update_secret
