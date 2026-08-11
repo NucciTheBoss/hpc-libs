@@ -61,16 +61,6 @@ class ExampleInterface(Interface):
         self._save_integration_data(data, target, **kwargs)
 
 
-class _Interface(Interface):
-    """Thin subclass exposing protected methods for testing."""
-
-    def load(self, cls, **kwargs):
-        return self._load_integration_data(cls, **kwargs)
-
-    def save(self, data, target, **kwargs) -> None:
-        self._save_integration_data(data, target, **kwargs)
-
-
 @dataclass
 class ExampleData:
     """Sample data manipulated by the mock charms."""
