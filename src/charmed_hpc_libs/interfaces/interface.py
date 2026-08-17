@@ -17,7 +17,7 @@
 __all__ = ["Interface"]
 
 import dataclasses
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Set
 from typing import Any, Literal
 
 import ops
@@ -220,6 +220,7 @@ class Interface(ops.Object):
         encoder: Callable[[Any], str] | None = None,
         merge: bool = False,
         decoder: Callable[[str], Any] | None = None,
+        reset: Set[str] = frozenset(),
     ) -> None:
         """Save integration data.
 
@@ -236,6 +237,15 @@ class Interface(ops.Object):
             decoder:
                 Callable used to decode existing databag data when merging.
                 Only used when ``merge`` is True.
+            reset:
+                Set of dataclass fields to reset to their default value when
+                ``merge`` is True.
+
+        Raises:
+            TypeError: Raised if ``merge`` is True and ``data`` is not a dataclass instance.
+            ValueError:
+                Raised if ``merge`` is True and a field is included in ``reset``,
+                but does not have default value defined in ``data``.
         """
         integrations = self.integrations
         if integration_id is not None:
@@ -252,24 +262,42 @@ class Interface(ops.Object):
             raise TypeError(f"`merge=True` requires a dataclass instance, got '{cls.__name__}'")
 
         set_fields = {
-            f.name: getattr(data, f.name)
-            for f in dataclasses.fields(cls)
-            if not self._field_is_default(f, getattr(data, f.name))
+            field.name: getattr(data, field.name)
+            for field in dataclasses.fields(cls)
+            if not self._field_is_default(field, getattr(data, field.name))
+        }
+        reset_fields = {
+            field.name: self._get_field_default(field)
+            for field in dataclasses.fields(cls)
+            if field.name in reset
         }
 
         for integration in integrations:
             existing = integration.load(cls, target, decoder=decoder)
-            merged = dataclasses.replace(existing, **set_fields)
+            merged = dataclasses.replace(existing, **(set_fields | reset_fields))
             integration.save(merged, target, encoder=encoder)
 
     @staticmethod
     def _field_is_default(field: dataclasses.Field, value: Any) -> bool:
         """Check if a field value is equal to its declared default."""
+        try:
+            return value == Interface._get_field_default(field)
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _get_field_default(field: dataclasses.Field) -> Any:
+        """Get the default value of a dataclass field.
+
+        Raises:
+            ValueError: Raised if a dataclass field does not have a declared default.
+        """
         if field.default is not dataclasses.MISSING:
-            return value == field.default
+            return field.default
         if field.default_factory is not dataclasses.MISSING:
-            return value == field.default_factory()
-        return False
+            return field.default_factory()
+
+        raise ValueError(f"Field `{field.name}` does not have a declared default value")
 
     @staticmethod
     def _is_integration_active(integration: ops.Relation) -> bool:
