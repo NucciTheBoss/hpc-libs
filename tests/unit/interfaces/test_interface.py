@@ -69,6 +69,14 @@ class ExampleData:
     value: str = ""
 
 
+@dataclass
+class ExampleDataWithRequiredField:
+    """Sample data with a required field (no declared default)."""
+
+    name: str
+    value: str = ""
+
+
 class MockCharm(ops.CharmBase):
     """Mock charm for testing the `Interface` base class."""
 
@@ -268,6 +276,43 @@ class TestInterface:
 
         integration = state.get_relation(1)
         assert integration.local_app_data == {"name": '"foo"', "value": '""'}
+
+    def test_save_merge_reset_field_to_default(self, mock_charm, with_id) -> None:
+        """Test that ``reset`` forces a non-default field back to its default."""
+        with mock_charm(
+            mock_charm.on.update_status(),
+            state=testing.State(leader=True, relations={make_integration(id=1)}),
+        ) as manager:
+            manager.charm.interface.save(
+                ExampleData(name="foo", value="bar"),
+                target=manager.charm.app,
+            )
+            manager.charm.interface.save(
+                ExampleData(name="baz"),
+                target=manager.charm.app,
+                integration_id=1 if with_id else None,
+                merge=True,
+                reset={"value"},
+            )
+            state = manager.run()
+
+        integration = state.get_relation(1)
+        assert integration.local_app_data == {"name": '"baz"', "value": '""'}
+
+    def test_save_merge_reset_field_no_default(self, mock_charm) -> None:
+        """Test that ``ValueError`` is raised when resetting a field with no default."""
+        with mock_charm(
+            mock_charm.on.update_status(),
+            state=testing.State(leader=True, relations={make_integration(id=1)}),
+        ) as manager:
+            with pytest.raises(ValueError, match="does not have a declared default"):
+                manager.charm.interface.save(
+                    ExampleDataWithRequiredField(name="foo"),
+                    target=manager.charm.app,
+                    merge=True,
+                    reset={"name"},
+                )
+            manager.run()
 
     def test_save_merge_requires_dataclass(self, mock_charm) -> None:
         """Test that ``TypeError`` is raised if ``data`` isn't a dataclass and ``merge=True``."""
