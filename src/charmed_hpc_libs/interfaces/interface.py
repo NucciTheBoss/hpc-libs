@@ -241,11 +241,16 @@ class Interface(ops.Object):
                 Set of dataclass fields to reset to their default value when
                 ``merge`` is True.
 
+                ``reset`` has precedence over ``data`` when ``merge`` is True,
+                so any field in ``data`` whose name is present in ``reset`` will be
+                set back to its default value.
+
         Raises:
             TypeError: Raised if ``merge`` is True and ``data`` is not a dataclass instance.
             ValueError:
                 Raised if ``merge`` is True and a field is included in ``reset``,
-                but does not have default value defined in ``data``.
+                but does not have default value defined in ``data``. Also raised
+                if a field name provided in ``reset`` does not exist in ``data``.
         """
         integrations = self.integrations
         if integration_id is not None:
@@ -261,6 +266,11 @@ class Interface(ops.Object):
         if not dataclasses.is_dataclass(cls):
             raise TypeError(f"`merge=True` requires a dataclass instance, got '{cls.__name__}'")
 
+        field_names = {f.name for f in dataclasses.fields(cls)}
+        unknown = reset - field_names
+        if unknown:
+            raise ValueError(f"Unknown field(s) in `reset`: {sorted(unknown)}")
+
         set_fields = {
             field.name: getattr(data, field.name)
             for field in dataclasses.fields(cls)
@@ -271,7 +281,6 @@ class Interface(ops.Object):
             for field in dataclasses.fields(cls)
             if field.name in reset
         }
-
         for integration in integrations:
             existing = integration.load(cls, target, decoder=decoder)
             merged = dataclasses.replace(existing, **(set_fields | reset_fields))
