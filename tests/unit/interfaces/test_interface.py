@@ -312,6 +312,23 @@ class TestInterface:
                     merge=True,
                     reset={"name"},
                 )
+
+            manager.run()
+
+    def test_save_merge_nonexistent_field_name(self, mock_charm) -> None:
+        """Test that ``ValueError`` is raised if ``reset`` contains a nonexistent field name."""
+        with mock_charm(
+            mock_charm.on.update_status(),
+            state=testing.State(leader=True, relations={make_integration(id=1)}),
+        ) as manager:
+            with pytest.raises(ValueError):
+                manager.charm.interface.save(
+                    ExampleData(name="foo"),
+                    target=manager.charm.app,
+                    merge=True,
+                    reset={"id"},
+                )
+
             manager.run()
 
     def test_save_merge_requires_dataclass(self, mock_charm) -> None:
@@ -326,6 +343,7 @@ class TestInterface:
                     target=manager.charm.app,
                     merge=True,
                 )
+
             manager.run()
 
     def test_save_not_merge_overwrites_all_fields(self, mock_charm) -> None:
